@@ -8,15 +8,12 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtPrintSupport import *
-from PyQt5 import QtGui,QtCore,QtWidgets
+from PyQt5 import QtGui
 from aksharamukha import transliterate
-import typing
 import re
 
 from utils.custom_textedit import *
 from utils.rare_char_window import *
-
-from docx import Document
 
 from PyQt5.QtWidgets import QFileDialog
 import os
@@ -48,7 +45,7 @@ class MainWindow(QMainWindow):
         self.radio_button_pressed = ''
 
 
-        layout = QGridLayout()
+        self.layout = QGridLayout()
         
 
         #ALL KEYS DISPLAY LABEL:
@@ -62,15 +59,16 @@ class MainWindow(QMainWindow):
         _font.setPointSize(18)
         self.transliterated_text.setFont(_font)
         
-        #initialize the main text box
+        #initialize Hindi Text Edit
         self.editor = TextEdit(self.label_trackAllKeys)
         _font = QFont('Shobhika')
         _font.setPointSize(18)
         self.editor.setFont(_font)
-        
         # Setup the QTextEdit editor configuration
-        self.editor.setAutoFormatting(QTextEdit.AutoAll)
-        self.editor.selectionChanged.connect(self.update_format)
+        #self.editor.setAutoFormatting(QTextEdit.AutoAll)
+        #self.editor.selectionChanged.connect(self.update_format)
+
+
 
         # showing on fonts of the selected script
         qfontdb = QFontDatabase()
@@ -114,7 +112,7 @@ class MainWindow(QMainWindow):
 
 
 
-                 # Create the combobox
+        # Create the combobox
         self.combobox = QComboBox(self)   
         # Add items to the combobox
         self.combobox.addItem("ITRANS")
@@ -158,7 +156,7 @@ class MainWindow(QMainWindow):
         top_button_widget.setLayout(top_button_layout)
 
         # Add the widget containing the horizontal layout to the main layout
-        layout.addWidget(top_button_widget, 0, 0, 1, 11)
+        self.layout.addWidget(top_button_widget, 0, 0, 1, 11)
 
         font__ = QFont()
         font__.setPointSize(11)  # Set the font size to 11 point
@@ -187,14 +185,17 @@ class MainWindow(QMainWindow):
         # Add the powered_label to the button_layout
         button_layout.addWidget(powered_label)
         # Add the button_layout to the main layout
-        layout.addLayout(button_layout, 22, 4, 1, 4)
+        self.layout.addLayout(button_layout, 22, 4, 1, 4)
 
 
-        layout.addWidget(self.editor,2,0,20,11)
-        layout.addWidget(self.transliterated_text,23,0,2,11)
+        self.layout.addWidget(self.editor,2,0,20,11)
+
+
+        self.layout.addWidget(self.transliterated_text,23,0,2,11)
+        self.layout.addWidget(self.label_trackAllKeys,25,0,2,11)
 
         container = QWidget()
-        container.setLayout(layout)
+        container.setLayout(self.layout)
         self.setCentralWidget(container)
 
         self.status = QStatusBar()
@@ -239,12 +240,12 @@ class MainWindow(QMainWindow):
 
         undo_action = QAction(QIcon(os.path.join(':/images/arrow-curve-180-left.png')), "Undo", self)
         undo_action.setStatusTip("Undo last change")
-        undo_action.triggered.connect(self.editor.undo)
+        
+
         edit_menu.addAction(undo_action)
 
         redo_action = QAction(QIcon(os.path.join(':/images/arrow-curve.svg')), "Redo", self)
         redo_action.setStatusTip("Redo last change")
-        redo_action.triggered.connect(self.editor.redo)
         edit_toolbar.addAction(redo_action)
         edit_menu.addAction(redo_action)
 
@@ -253,28 +254,24 @@ class MainWindow(QMainWindow):
         cut_action = QAction(QIcon(os.path.join(':/images/scissors.svg')), "Cut", self)
         cut_action.setStatusTip("Cut selected text")
         cut_action.setShortcut(QKeySequence.Cut)
-        cut_action.triggered.connect(self.editor.cut)
         edit_toolbar.addAction(cut_action)
         edit_menu.addAction(cut_action)
 
         copy_action = QAction(QIcon(os.path.join(':/images/document-copy.svg')), "Copy", self)
         copy_action.setStatusTip("Copy selected text")
         cut_action.setShortcut(QKeySequence.Copy)
-        copy_action.triggered.connect(self.editor.copy)
         edit_toolbar.addAction(copy_action)
         edit_menu.addAction(copy_action)
 
         paste_action = QAction(QIcon(os.path.join(':/images/clipboard-paste-document-text.svg')), "Paste", self)
         paste_action.setStatusTip("Paste from clipboard")
         cut_action.setShortcut(QKeySequence.Paste)
-        paste_action.triggered.connect(self.editor.paste)
         edit_toolbar.addAction(paste_action)
         edit_menu.addAction(paste_action)
 
         select_action = QAction(QIcon(os.path.join(':/images/selection-input.png')), "Select all", self)
         select_action.setStatusTip("Select all text")
         cut_action.setShortcut(QKeySequence.SelectAll)
-        select_action.triggered.connect(self.editor.selectAll)
         edit_menu.addAction(select_action)
 
         edit_menu.addSeparator()
@@ -304,11 +301,12 @@ class MainWindow(QMainWindow):
         format_toolbar.addWidget(self.fontsize_box)
         format_toolbar.addWidget(self.fonts_manager)
 
+
+
         self.bold_action = QAction(QIcon(os.path.join(':/images/edit-bold.png')), "Bold", self)
         self.bold_action.setStatusTip("Bold")
         self.bold_action.setShortcut(QKeySequence.Bold)
         self.bold_action.setCheckable(True)
-        self.bold_action.toggled.connect(lambda x: self.editor.setFontWeight(QFont.Bold if x else QFont.Normal))
         format_toolbar.addAction(self.bold_action)
         format_menu.addAction(self.bold_action)
 
@@ -316,7 +314,6 @@ class MainWindow(QMainWindow):
         self.italic_action.setStatusTip("Italic")
         self.italic_action.setShortcut(QKeySequence.Italic)
         self.italic_action.setCheckable(True)
-        self.italic_action.toggled.connect(self.editor.setFontItalic)
         format_toolbar.addAction(self.italic_action)
         format_menu.addAction(self.italic_action)
 
@@ -324,7 +321,6 @@ class MainWindow(QMainWindow):
         self.underline_action.setStatusTip("Underline")
         self.underline_action.setShortcut(QKeySequence.Underline)
         self.underline_action.setCheckable(True)
-        self.underline_action.toggled.connect(self.editor.setFontUnderline)
         format_toolbar.addAction(self.underline_action)
         format_menu.addAction(self.underline_action)
 
@@ -333,28 +329,24 @@ class MainWindow(QMainWindow):
         self.alignl_action = QAction(QIcon(os.path.join(':/images/edit-alignment.svg')), "Align left", self)
         self.alignl_action.setStatusTip("Align text left")
         self.alignl_action.setCheckable(True)
-        self.alignl_action.triggered.connect(lambda: self.editor.setAlignment(Qt.AlignLeft))
         format_toolbar.addAction(self.alignl_action)
         format_menu.addAction(self.alignl_action)
 
         self.alignc_action = QAction(QIcon(os.path.join(':/images/edit-alignment-center.svg')), "Align center", self)
         self.alignc_action.setStatusTip("Align text center")
         self.alignc_action.setCheckable(True)
-        self.alignc_action.triggered.connect(lambda: self.editor.setAlignment(Qt.AlignCenter))
         format_toolbar.addAction(self.alignc_action)
         format_menu.addAction(self.alignc_action)
 
         self.alignr_action = QAction(QIcon(os.path.join(':/images/edit-alignment-right.svg')), "Align right", self)
         self.alignr_action.setStatusTip("Align text right")
         self.alignr_action.setCheckable(True)
-        self.alignr_action.triggered.connect(lambda: self.editor.setAlignment(Qt.AlignRight))
         format_toolbar.addAction(self.alignr_action)
         format_menu.addAction(self.alignr_action)
 
         self.alignj_action = QAction(QIcon(os.path.join(':/images/edit-alignment-justify.svg')), "Justify", self)
         self.alignj_action.setStatusTip("Justify text")
         self.alignj_action.setCheckable(True)
-        self.alignj_action.triggered.connect(lambda: self.editor.setAlignment(Qt.AlignJustify))
         format_toolbar.addAction(self.alignj_action)
         format_menu.addAction(self.alignj_action)
 
@@ -366,6 +358,48 @@ class MainWindow(QMainWindow):
         format_group.addAction(self.alignj_action)
 
         format_menu.addSeparator()
+
+
+        # Replace the editor with a new one
+        # new_editor = QTextEdit()  # Create a new QTextEdit instance
+        # _font = QFont('Shobhika') # apply font from the new language
+        # _font.setPointSize(18)
+        # new_editor.setFont(_font)
+        # # COPY TEXT FROM OLD EDITOR TO NEW EDITOR
+        # # Remove the old editor from the layout
+        # self.layout.removeWidget(self.editor)
+        # self.editor.deleteLater()  # Optional: deletes the old widget safely
+        # # Assign the new editor to self.editor
+        # self.editor = new_editor
+        # # Add the new editor to the layout
+        # self.layout.addWidget(self.editor,2,0,20,11)
+
+
+
+        # # Disconnect old signal (optional)
+        # redo_action.triggered.disconnect()
+        # # Assign the new editor
+        # self.editor = new_editor
+        # # Connect the action to the new editor's redo slot
+        # redo_action.triggered.connect(self.editor.redo)
+
+        undo_action.triggered.connect(self.editor.undo)
+        redo_action.triggered.connect(self.editor.redo)
+        cut_action.triggered.connect(self.editor.cut)
+        copy_action.triggered.connect(self.editor.copy)
+        paste_action.triggered.connect(self.editor.paste)
+        select_action.triggered.connect(self.editor.selectAll)
+
+        self.bold_action.toggled.connect(lambda x: self.editor.setFontWeight(QFont.Bold if x else QFont.Normal))
+        self.italic_action.toggled.connect(self.editor.setFontItalic)
+        self.underline_action.toggled.connect(self.editor.setFontUnderline)
+        self.alignl_action.triggered.connect(lambda: self.editor.setAlignment(Qt.AlignLeft))
+        self.alignc_action.triggered.connect(lambda: self.editor.setAlignment(Qt.AlignCenter))
+        self.alignr_action.triggered.connect(lambda: self.editor.setAlignment(Qt.AlignRight))
+        self.alignj_action.triggered.connect(lambda: self.editor.setAlignment(Qt.AlignJustify))
+
+
+
 
         self.hindi_button.setChecked(True)
         self.on_hindi_button_clicked()
@@ -383,7 +417,7 @@ class MainWindow(QMainWindow):
         ]
 
         # Initialize.
-        self.update_format()
+        #self.update_format()
         self.update_title()
         self.show()
 
@@ -395,33 +429,33 @@ class MainWindow(QMainWindow):
         self.special_char_window = RareCharacterWindow(self.editor)
         self.special_char_window.show()
 
-    def insert_special_character(self, char):
-        cursor = self.editor.textCursor()
-        cursor.insertText(char)
+    # def insert_special_character(self, char):
+    #     cursor = self.editor.textCursor()
+    #     cursor.insertText(char)
 
     def block_signals(self, objects, b):
         for o in objects:
             o.blockSignals(b)
 
-    def update_format(self):
-        """
-        Update the font format toolbar/actions when a new text selection is made. This is necessary to keep
-        toolbars/etc. in sync with the current edit state.
-        :return:
-        """
-        # Disable signals for all format widgets, so changing values here does not trigger further formatting.
-        self.block_signals(self._format_actions, True)
+    # def update_format(self):
+    #     """
+    #     Update the font format toolbar/actions when a new text selection is made. This is necessary to keep
+    #     toolbars/etc. in sync with the current edit state.
+    #     :return:
+    #     """
+    #     # Disable signals for all format widgets, so changing values here does not trigger further formatting.
+    #     self.block_signals(self._format_actions, True)
 
-        self.italic_action.setChecked(self.editor.fontItalic())
-        self.underline_action.setChecked(self.editor.fontUnderline())
-        self.bold_action.setChecked(self.editor.fontWeight() == QFont.Bold)
+    #     self.italic_action.setChecked(self.editor.fontItalic())
+    #     self.underline_action.setChecked(self.editor.fontUnderline())
+    #     self.bold_action.setChecked(self.editor.fontWeight() == QFont.Bold)
 
-        self.alignl_action.setChecked(self.editor.alignment() == Qt.AlignLeft)
-        self.alignc_action.setChecked(self.editor.alignment() == Qt.AlignCenter)
-        self.alignr_action.setChecked(self.editor.alignment() == Qt.AlignRight)
-        self.alignj_action.setChecked(self.editor.alignment() == Qt.AlignJustify)
+    #     self.alignl_action.setChecked(self.editor.alignment() == Qt.AlignLeft)
+    #     self.alignc_action.setChecked(self.editor.alignment() == Qt.AlignCenter)
+    #     self.alignr_action.setChecked(self.editor.alignment() == Qt.AlignRight)
+    #     self.alignj_action.setChecked(self.editor.alignment() == Qt.AlignJustify)
 
-        self.block_signals(self._format_actions, False)
+    #     self.block_signals(self._format_actions, False)
 
     def dialog_critical(self, s):
         dlg = QMessageBox(self)
@@ -524,11 +558,10 @@ class MainWindow(QMainWindow):
         self.editor.setLineWrapMode( 1 if self.editor.lineWrapMode() == 0 else 0 )
 
     def on_sanskrit_button_clicked(self):
+        #TODO change_editor()
         self.editor.english_bypass =False 
         print("Sanskrit button clicked")
         from mappings.mappings_v1 import C,V,v,misc
-
-        #TODO instead of changing the editor variables, change the editor itself, so that we easily change the rules too!
 
         self.editor.C = C #consonents
         self.editor.V = V #Independent Vowels
